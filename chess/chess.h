@@ -7,7 +7,6 @@
 #define chess
 #include <array>
 
-#define DEBUG
 
 /**
  * @brief 定义一个复数类
@@ -38,52 +37,69 @@ public:
 private:
 };
 
-
 /**
- * @brief 定义一个围棋棋盘
+ * @brief 棋子类
+ * @class Chess
  * @author Aurora
- * @date 2024-7-20
- * @class Chessboard
  */
+class Chess {
+public:
+    /**
+     * @brief 构造函数 新建一个棋子
+     * @param color : 棋子颜色 0: none -1: black 1: white
+     * @param position : 棋子在复平面上的坐标
+     */
+    Chess(int color, Complex position);
+    Chess();
+    ~Chess();
+
+    Complex position;   // 棋子坐标
+    int color;  // 0: none -1: black 1: white
+};
+
 class Chessboard {
 public:
+    /**
+     * @brief 初始化一个新棋盘
+     */
     Chessboard();
-    explicit Chessboard(std::array<std::array<int, 19>, 19> board);
 
     /**
      * @brief 落子
-     * @param color - 0: 无棋子 1:黑棋 2:白棋
-     * @param position - 棋盘坐标
-     * @return 是否成功
+     * @param color : 棋子颜色
+     * @param position : 棋子坐标
      */
-    bool drop(int color, Complex position);
-
+    void drop(int color, Complex position);
     /**
-     * @brief 清除改坐标上的子
-     * @param position - 坐标
-     * @return 是否成功
+     * @brief 查看颜色
+     * @param position : 坐标
+     * @return 该坐标的颜色
      */
-    bool clear(Complex position);
-
+    int getColor(Complex position);
     /**
-     * @brief 打印棋子状态
-     * @return 棋盘
-     */
-    std::array<std::array<int, 19>, 19> draw();
-
-    /**
-     * @brief 检测是否有棋子为死棋
+     * @brief 更新棋盘状态
      */
     void update();
 
     /**
-     * @brief 获取棋子的颜色
-     * @param position - 棋子坐标
-     * @return 棋子的颜色 0: 无棋子 1:黑棋 2:白棋 3: ERROR
+     * @return 获胜方 1: white -1: black 0: 平局
      */
-    int getColor(Complex position);
+    int whoWin();
+
+    std::array<std::array<Chess, 19>, 19> chessboard;
+protected:
+    int whoTurn;    // 当前谁应该落子
+    int sumChess;   // 当前共下棋子个数
+
 private:
-    std::array<std::array<int, 19>, 19> goBoard{};
+    bool DFS(const Complex& position, int color, std::vector<std::vector<bool>>& visited, std::vector<Complex>& group);
+    int DFSForTerritory(const Complex& pos, std::vector<std::vector<bool>>&visited);
+    std::array<Complex, 4> directions = {
+            Complex(0, 1), // down
+            Complex(0, -1), //up
+            Complex(-1, 0),     // left
+            Complex(1, 0)    // right
+    };  // 表示方向
 };
 
 #endif
