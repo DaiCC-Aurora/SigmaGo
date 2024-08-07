@@ -7,10 +7,16 @@
 #include <iostream>
 #include <vector>
 #include <stack>
+#include <torch/torch.h>
 #include "chess.h"
 
 Complex::Complex() : realPart(0), imaginaryPart(0) {}
 Complex::Complex(int x, int y) : realPart(x), imaginaryPart(y) {}
+
+int Complex::absolutePos() const {
+    int result = this->realPart + 19 * imaginaryPart;
+    return result;
+}
 
 Complex Complex::operator+(const Complex &complex) const {
     return {this->realPart + complex.realPart, this->imaginaryPart + complex.imaginaryPart};
@@ -45,6 +51,11 @@ void Chessboard::drop(int color, Complex position) {
     chessboard[position.realPart][position.imaginaryPart] = Chess(color, position);
     whoTurn = -whoTurn;
     sumChess++;
+
+    std::array<std::array<Chess, 19>, 19> c;
+    c[position.realPart][position.imaginaryPart].color = whoTurn;
+    allStates.push_back(c);
+
     update();
 }
 
@@ -189,4 +200,48 @@ int Chessboard::DFSForTerritory(const Complex &position, std::vector<std::vector
     }
 
     return territoryColor;
+}
+
+std::vector<Complex> Chessboard::availables() {
+    std::vector<Complex> result;
+    for (int i = 0; i < 19; i++) {
+        for (int j = 0; j < 19; j++) {
+            if (chessboard[i][j].color == 0) {
+                result.emplace_back(Complex(i, j));
+            }
+        }
+    }
+    return result;
+}
+
+torch::Tensor Chessboard::getState() {
+    torch::Tensor state = torch::zeros({4, 19, 19}, torch::dtype(torch::kFloat32));
+
+    for (int i = 0; i < 19; i++) {
+        for (int j = 0; j < 19; j++) {
+            Complex pos(i, j);
+            int color = getColor(pos);
+            if (color == whoTurn) {
+                state.index_put_({0, i, j}, 1.0);
+            } else if (color == -whoTurn) {
+                state.index_put_({1, i, j}, 1.0);
+            }
+        }
+    }
+
+    if (sumChess > 0) {
+        auto lastMovePos = allStates.back();
+        for (int i = 0; i < 19; i++) {
+            for (int j = 0; j < 19; j++) {
+                Complex position(i, j);
+                if (getColor(position) == 1 || getColor(position) == -1) {
+                    state.index_put_({2, i, j}, 1.0);
+                }
+            }
+        }
+    }
+
+    state.index_put_({3, torch::indexing::Slice(), torch::indexing::Slice()}, (whoTurn == 1) ? 1.0 : -1.0);
+
+    return state;
 }

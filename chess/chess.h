@@ -6,6 +6,9 @@
 #ifndef chess
 #define chess
 #include <array>
+#include <tuple>
+#include <vector>
+#include <torch/torch.h>
 
 
 /**
@@ -18,6 +21,14 @@ class Complex {
 public:
     Complex();
     Complex(int x, int y);
+
+    /**
+     * @brief 获取绝对位置
+     * @return 绝对位置
+     * @example 0   1   2   3   4       0 <=> (0, 0)  3 <=> (3, 0)
+     *          5   6   7   8   9       6 <=> (1, 1)
+     */
+    int absolutePos() const;
 
     /**
      * @brief 重载运算符
@@ -86,10 +97,19 @@ public:
      */
     int whoWin();
 
+    /**
+     * @brief 获取所有落点
+     * @return 所有落点
+     */
+    std::vector<Complex> availables();
+
+    torch::Tensor getState();
+
     std::array<std::array<Chess, 19>, 19> chessboard;
-protected:
     int whoTurn;    // 当前谁应该落子
     int sumChess;   // 当前共下棋子个数
+
+    std::vector<std::array<std::array<Chess, 19>, 19>> allStates;
 
 private:
     bool DFS(const Complex& position, int color, std::vector<std::vector<bool>>& visited, std::vector<Complex>& group);

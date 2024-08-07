@@ -1,6 +1,10 @@
-cmake_minimum_required(VERSION 3.25)
+cmake_minimum_required(VERSION 3.21 FATAL_ERROR)
 project(chess)
 
-set(CMAKE_CXX_STANDARD 17)
+find_package(Torch REQUIRED)
+include_directories("${TORCH_INCLUDE_DIRS}")
 
-add_executable(chess chess.cpp chess.h)
+add_library(chess SHARED chess.cpp chess.h)
+
+target_link_libraries(chess "${TORCH_LIBRARIES}")
+set_property(TARGET chess PROPERTY CXX_STANDARD 17)
